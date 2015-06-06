@@ -99,7 +99,7 @@ public class OOPUnitCore {
 				// Upon remote exception, check the exception type and set the result
 				OOPTest annotation = mp.method.getAnnotation(OOPTest.class);
 				
-				if(annotation.test_throws() && (targetEx.getCause().getClass() == annotation.exc())) {
+				if(annotation.test_throws() && (targetEx.getCause().getClass().equals(annotation.exc()))) {
 					result = new OOPResultImpl(null, OOPResult.OOPTestResult.SUCCESS);
 				} else if(targetEx.getCause() instanceof OOPAssertionError) {
 					result = new OOPResultImpl(targetEx.getCause().getMessage(), 
@@ -174,7 +174,7 @@ public class OOPUnitCore {
 		
 		// The list is ordered from the current class to the topmost superclass.
 		// For before methods, reverse the list
-		if(type == OOPBefore.class || type == OOPSetup.class) {
+		if(type.equals(OOPBefore.class) || type.equals(OOPSetup.class)) {
 			Collections.reverse(returnList);
 		}
 		
@@ -187,7 +187,8 @@ public class OOPUnitCore {
 			backup = testClass.newInstance();
 		} catch (Exception e) {}
 		
-		for (Field field : testClass.getFields()) {
+		for (Field field : testClass.getDeclaredFields()) {
+			field.setAccessible(true);
 			boolean didBackup = false;
 			
 			for (Class<?> i : field.getDeclaringClass().getInterfaces()) {
@@ -207,11 +208,15 @@ public class OOPUnitCore {
 				Constructor<?> c = field.getDeclaringClass().getConstructor(testClass);
 				field.set(backup, c.newInstance(field.get(testObject)));
 				continue;
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			try {
 				field.set(backup, field.get(testObject));
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return backup;
