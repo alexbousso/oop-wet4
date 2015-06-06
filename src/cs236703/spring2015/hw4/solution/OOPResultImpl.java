@@ -7,6 +7,10 @@ public class OOPResultImpl implements OOPResult {
 	private OOPTestResult result;
 	private String message;
 	
+	public OOPResultImpl() {
+		
+	}
+	
 	public OOPResultImpl(String message, OOPTestResult result) {
 		this.message = message;
 		this.result = result;

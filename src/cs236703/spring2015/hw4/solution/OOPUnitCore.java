@@ -2,6 +2,7 @@ package cs236703.spring2015.hw4.solution;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -75,12 +76,20 @@ public class OOPUnitCore {
 		
 		// Invoke all the test methods, and invoke the before and after methods if required
 		for(MethodPair mp : allTestMethods) {
-			invokeBeforeMethods(mp.method.getName(), testClass, newObject);
-			OOPResult result;
+			Object backup = new Object();
+			OOPResult result = new OOPResultImpl();
+			
+			try {
+				backup = invokeBeforeMethods(mp.method.getName(), testClass, newObject);
+			} catch (Exception e) {
+				result = new OOPResultImpl(e.getMessage(), OOPResult.OOPTestResult.ERROR);
+				resultMap.put(mp.method.getName(), result);
+				continue;
+			}
+			
 			try {
 				mp.method.invoke(newObject);
 				result = new OOPResultImpl(null, OOPResult.OOPTestResult.SUCCESS);
-				resultMap.put(mp.method.getName(), result);
 			} catch(InvocationTargetException targetEx) {
 				// Upon remote exception, check the exception type and set the result
 				if(targetEx.getCause() instanceof OOPAssertionError) {
@@ -90,34 +99,23 @@ public class OOPUnitCore {
 					result = new OOPResultImpl(targetEx.getCause().getMessage(),
 							OOPResult.OOPTestResult.ERROR);
 				}
-				resultMap.put(mp.method.getName(), result);
 			} catch(Exception e) {}
-			invokeAfterMethods(mp.method.getName(), testClass, newObject);
+			
+			try {
+				invokeAfterMethods(mp.method.getName(), testClass, newObject, backup);
+			} catch (Exception e) {
+				result = new OOPResultImpl(e.getMessage(), OOPResult.OOPTestResult.ERROR);
+			}
+			
+			resultMap.put(mp.method.getName(), result);
 		}
 		
 		return new OOPTestSummary(resultMap); 
 	}
 	
-	private static boolean invokeBeforeMethods(String methodName, Class<?> testClass, Object testObject) {
-		Object backup;
-		boolean didBackup = false;
-		
-		for (Class<?> c : testClass.getInterfaces()) {
-			if (c.getName().equals("Cloneable")) {
-				try {
-					backup = testClass.getMethod("clone").invoke(testObject);
-					didBackup = true;
-				} catch (Exception e) {}
-			}
-		}
-		
-		if (didBackup == false) {
-			try {
-				Constructor<?> c = testClass.getConstructor(testClass);
-				backup = c.newInstance(testObject);
-				didBackup = true;
-			} catch (Exception e) {}
-		}
+	private static Object invokeBeforeMethods(String methodName, Class<?> testClass,
+			Object testObject) throws Exception {
+		Object backup = backupObject(testClass, testObject);
 		
 		for(Method method : testClass.getMethods()) {
 			if(method.isAnnotationPresent(OOPBefore.class)) {
@@ -128,20 +126,55 @@ public class OOPUnitCore {
 						try {
 							method.invoke(testObject);
 						} catch(Exception e) {
-							return false;
+							testObject = backup;
+							throw e;
 						}
 					}
 				}
 			}
 		}
-		return true;
+		
+		return backup;
 	}
 	
-//	private static Object backupObject(Class<?> testClass, Object testObject) {
-//		
-//	}
+	private static Object backupObject(Class<?> testClass, Object testObject) {
+		Object backup = new Object();
+		try {
+			backup = testClass.newInstance();
+		} catch (Exception e) {}
+		
+		for (Field field : testClass.getFields()) {
+			boolean didBackup = false;
+			
+			for (Class<?> i : field.getDeclaringClass().getInterfaces()) {
+				if (i.getName().equals("Cloneable")) {
+					try {
+						Object fieldBackup = field.getDeclaringClass().getMethod("clone").invoke(testObject);
+						field.set(backup, fieldBackup);
+						didBackup = true;
+						break;
+					} catch (Exception e) {}
+				}
+			}
+			
+			if (didBackup) continue;
+			
+			try {
+				Constructor<?> c = field.getDeclaringClass().getConstructor(testClass);
+				field.set(backup, c.newInstance(field.get(testObject)));
+				continue;
+			} catch (Exception e) {}
+			
+			try {
+				field.set(backup, field.get(testObject));
+			} catch (Exception e) {}
+		}
+		
+		return backup;
+	}
 	
-	private static void invokeAfterMethods(String methodName, Class<?> testClass, Object testObject) {
+	private static void invokeAfterMethods(String methodName, Class<?> testClass, Object testObject,
+			Object originalBackup) throws Exception {
 		for(Method method : testClass.getMethods()) {
 			if(method.isAnnotationPresent(OOPAfter.class)) {
 				OOPAfter annotation = method.getAnnotation(OOPAfter.class);
@@ -150,7 +183,10 @@ public class OOPUnitCore {
 					if(s.equals(methodName)) {
 						try {
 							method.invoke(testObject);
-						} catch(Exception e) {}
+						} catch(Exception e) {
+							testObject = originalBackup;
+							throw e;
+						}
 					}
 				}
 			}
