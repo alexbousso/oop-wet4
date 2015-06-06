@@ -97,7 +97,11 @@ public class OOPUnitCore {
 				result = new OOPResultImpl(null, OOPResult.OOPTestResult.SUCCESS);
 			} catch(InvocationTargetException targetEx) {
 				// Upon remote exception, check the exception type and set the result
-				if(targetEx.getCause() instanceof OOPAssertionError) {
+				OOPTest annotation = mp.method.getAnnotation(OOPTest.class);
+				
+				if(annotation.test_throws() && (targetEx.getCause().getClass() == annotation.exc())) {
+					result = new OOPResultImpl(null, OOPResult.OOPTestResult.SUCCESS);
+				} else if(targetEx.getCause() instanceof OOPAssertionError) {
 					result = new OOPResultImpl(targetEx.getCause().getMessage(), 
 							OOPResult.OOPTestResult.FAILURE);
 				} else {
