@@ -55,8 +55,13 @@ public class OOPUnitCore {
 		}
 		
 		// Find the OOPSetup methods and invoke them
-		invokeMethodByAnnotation(testClass, newObject, OOPSetup.class);
-		
+		List<Method> setupMethods = getBeforeAfterSetupMethods(testClass, OOPSetup.class);
+		for(Method method : setupMethods) {
+			try {
+				method.invoke(newObject);
+			} catch(Exception e) {}
+		}
+
 		// Find the test methods
 		List<MethodPair> allTestMethods = new ArrayList<>();
 		for(Method method : testClass.getMethods()) {
@@ -117,24 +122,59 @@ public class OOPUnitCore {
 			Object testObject) throws Exception {
 		Object backup = backupObject(testClass, testObject);
 		
-		for(Method method : testClass.getMethods()) {
-			if(method.isAnnotationPresent(OOPBefore.class)) {
-				OOPBefore annotation = method.getAnnotation(OOPBefore.class);
-				
-				for(String s : annotation.value()) {
-					if(s.equals(methodName)) {
-						try {
-							method.invoke(testObject);
-						} catch(Exception e) {
-							testObject = backup;
-							throw e;
-						}
+		List<Method> methodsToRun = getBeforeAfterSetupMethods(testClass, OOPBefore.class);
+		for(Method method : methodsToRun){
+			OOPBefore annotation = method.getAnnotation(OOPBefore.class);
+			for(String s : annotation.value()) {
+				if(s.equals(methodName)) {
+					try {
+						method.invoke(testObject);
+					} catch(Exception e) {
+						testObject = backup;
+						throw e;
 					}
 				}
 			}
 		}
 		
 		return backup;
+	}
+	
+	/**
+	 * Returns a list of before/after methods belonging to a test class, in the required order
+	 * according to the annotation type (meaning that for OOPBefore, methods will be ordered
+	 * from topmost superclass to the class itself, and for OOPAfter, they will be ordered
+	 * in reverse)
+	 * @param testClass The class from which to start the lookup
+	 * @param type The type of annotation to seek
+	 * @return A list of before/after methods
+	 */
+	private static List<Method> getBeforeAfterSetupMethods(Class<?> testClass, 
+			Class<? extends Annotation> type) {
+		List<Method> returnList = new ArrayList<>();
+		Class<?> current = testClass;
+		
+		// Extract the relevant methods from the class, and proceed to its superclass,
+		// until you've reached Object, which is the root of all objects
+		while(current != Object.class) {
+			// Get the methods of the current class
+			for(Method m : current.getMethods()) {
+				if(m.isAnnotationPresent(type)) {
+					returnList.add(m);
+				}
+			}
+			
+			// Proceed to the superclass
+			current = current.getSuperclass();
+		}
+		
+		// The list is ordered from the current class to the topmost superclass.
+		// For before methods, reverse the list
+		if(type == OOPBefore.class || type == OOPSetup.class) {
+			Collections.reverse(returnList);
+		}
+		
+		return returnList;
 	}
 	
 	private static Object backupObject(Class<?> testClass, Object testObject) {
@@ -175,31 +215,20 @@ public class OOPUnitCore {
 	
 	private static void invokeAfterMethods(String methodName, Class<?> testClass, Object testObject,
 			Object originalBackup) throws Exception {
-		for(Method method : testClass.getMethods()) {
-			if(method.isAnnotationPresent(OOPAfter.class)) {
-				OOPAfter annotation = method.getAnnotation(OOPAfter.class);
-				
-				for(String s : annotation.value()) {
-					if(s.equals(methodName)) {
-						try {
-							method.invoke(testObject);
-						} catch(Exception e) {
-							testObject = originalBackup;
-							throw e;
-						}
+		
+		List<Method> methodsToRun = getBeforeAfterSetupMethods(testClass, OOPAfter.class);
+		
+		for(Method method : methodsToRun) {
+			OOPAfter annotation = method.getAnnotation(OOPAfter.class);
+			for(String s : annotation.value()) {
+				if(s.equals(methodName)) {
+					try {
+						method.invoke(testObject);
+					} catch(Exception e) {
+						testObject = originalBackup;
+						throw e;
 					}
 				}
-			}
-		}
-	}
-
-	private static void invokeMethodByAnnotation(Class<?> testClass, Object testObject,
-			Class<? extends Annotation> annotationType) {
-		for(Method method : testClass.getMethods()) {
-			if(method.isAnnotationPresent(annotationType)) {
-				try {
-					method.invoke(testObject);
-				} catch (Exception e) {}
 			}
 		}
 	}
