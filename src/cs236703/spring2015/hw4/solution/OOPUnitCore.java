@@ -162,7 +162,7 @@ public class OOPUnitCore {
 		// until you've reached Object, which is the root of all objects
 		while(current != Object.class) {
 			// Get the methods of the current class
-			for(Method m : current.getMethods()) {
+			for(Method m : current.getDeclaredMethods()) {
 				if(m.isAnnotationPresent(type)) {
 					returnList.add(m);
 				}
