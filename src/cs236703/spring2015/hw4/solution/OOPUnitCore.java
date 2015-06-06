@@ -84,6 +84,7 @@ public class OOPUnitCore {
 			Object backup = new Object();
 			OOPResult result = new OOPResultImpl();
 			
+			// Backup the object and run all of the before methods
 			try {
 				backup = invokeBeforeMethods(mp.method.getName(), testClass, newObject);
 			} catch (Exception e) {
@@ -92,6 +93,7 @@ public class OOPUnitCore {
 				continue;
 			}
 			
+			// Run all tests
 			try {
 				mp.method.invoke(newObject);
 				result = new OOPResultImpl(null, OOPResult.OOPTestResult.SUCCESS);
@@ -110,9 +112,11 @@ public class OOPUnitCore {
 				}
 			} catch(Exception e) {}
 			
+			// Run all after methods. Upon exception, restore the object from backup
 			try {
-				invokeAfterMethods(mp.method.getName(), testClass, new Box(newObject), backup);
+				invokeAfterMethods(mp.method.getName(), testClass, newObject);
 			} catch (Exception e) {
+				newObject = backup;
 				result = new OOPResultImpl(e.getMessage(), OOPResult.OOPTestResult.ERROR);
 			}
 			
@@ -208,22 +212,17 @@ public class OOPUnitCore {
 				Constructor<?> c = field.getDeclaringClass().getConstructor(testClass);
 				field.set(backup, c.newInstance(field.get(testObject)));
 				continue;
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			} catch (Exception e) {}
 			
 			try {
 				field.set(backup, field.get(testObject));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			} catch (Exception e) {}
 		}
 		
 		return backup;
 	}
 	
-	private static void invokeAfterMethods(String methodName, Class<?> testClass, Object testObject,
-			Object originalBackup) throws Exception {
+	private static void invokeAfterMethods(String methodName, Class<?> testClass, Object testObject) throws Exception {
 		
 		List<Method> methodsToRun = getBeforeAfterSetupMethods(testClass, OOPAfter.class);
 		
@@ -234,7 +233,6 @@ public class OOPUnitCore {
 					try {
 						method.invoke(testObject);
 					} catch(Exception e) {
-						testObject = originalBackup;
 						throw e;
 					}
 				}
@@ -257,12 +255,4 @@ public class OOPUnitCore {
 		}
 		
 	}
-
-	private static class Box {
-		Object ref;
-		public Box(Object ref) { this.ref = ref; }
-		public Object get() { return this.ref; }
-		public void set(Object ref) { this.ref = ref; }
-	}
-	
 }

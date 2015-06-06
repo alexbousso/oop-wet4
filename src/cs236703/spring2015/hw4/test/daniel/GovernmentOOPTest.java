@@ -1,6 +1,7 @@
 package cs236703.spring2015.hw4.test.daniel;
 
 import java.text.SimpleDateFormat;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -85,9 +86,14 @@ public class GovernmentOOPTest {
 			"testaddAssistantsWithExpecting",
 			"testaddAssistantsWithWrongExpecting" })
 	public void removePrimeMinister() {
-		for (MemberOfKnesset k : allMembers) {
-			if (k.isPrimeMinister()) {
-				allMembers.remove(k);
+		// An iterator must be used here explicitly to avoid ConcurrentModificationException
+		Iterator<MemberOfKnesset> iter = allMembers.iterator();
+		
+		while(iter.hasNext()) {
+			MemberOfKnesset m = iter.next();
+			
+			if(m.isPrimeMinister()) {
+				iter.remove();
 			}
 		}
 	}
@@ -98,9 +104,14 @@ public class GovernmentOOPTest {
 			"testaddAssistantsWithExpecting",
 			"testaddAssistantsWithWrongExpecting" })
 	public void removeMinisters() {
-		for (MemberOfKnesset k : allMembers) {
-			if (k.isMinister() && !(k.isPrimeMinister())) {
-				allMembers.remove(k);
+		// An iterator must be used here explicitly to avoid ConcurrentModificationException
+		Iterator<MemberOfKnesset> iter = allMembers.iterator();
+		
+		while(iter.hasNext()) {
+			MemberOfKnesset m = iter.next();
+			
+			if(m.isMinister() && !m.isPrimeMinister()) {
+				iter.remove();
 			}
 		}
 	}
@@ -111,9 +122,14 @@ public class GovernmentOOPTest {
 			"testaddAssistantsWithExpecting",
 			"testaddAssistantsWithWrongExpecting" })
 	public void removeMembersOfKnesset() {
-		for (MemberOfKnesset k : allMembers) {
-			if (!k.isMinister()) {
-				allMembers.remove(k);
+		// An iterator must be used here explicitly to avoid ConcurrentModificationException
+		Iterator<MemberOfKnesset> iter = allMembers.iterator();
+		
+		while(iter.hasNext()) {
+			MemberOfKnesset m = iter.next();
+			
+			if(!m.isMinister()) {
+				iter.remove();
 			}
 		}
 	}
