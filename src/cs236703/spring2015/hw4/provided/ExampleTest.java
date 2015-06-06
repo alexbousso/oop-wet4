@@ -2,11 +2,10 @@ package cs236703.spring2015.hw4.provided;
 
 import static org.junit.Assert.*;
 
-
 import org.junit.Test;
 
-import cs236703.spring2015.hw4.solution.OOPUnitCore;
 import cs236703.spring2015.hw4.solution.OOPTestSummary;
+import cs236703.spring2015.hw4.solution.OOPUnitCore;
 
 public class ExampleTest {
 
