@@ -111,7 +111,7 @@ public class OOPUnitCore {
 			} catch(Exception e) {}
 			
 			try {
-				invokeAfterMethods(mp.method.getName(), testClass, newObject, backup);
+				invokeAfterMethods(mp.method.getName(), testClass, new Box(newObject), backup);
 			} catch (Exception e) {
 				result = new OOPResultImpl(e.getMessage(), OOPResult.OOPTestResult.ERROR);
 			}
@@ -256,6 +256,13 @@ public class OOPUnitCore {
 			return this.order - o.order;
 		}
 		
+	}
+
+	private static class Box {
+		Object ref;
+		public Box(Object ref) { this.ref = ref; }
+		public Object get() { return this.ref; }
+		public void set(Object ref) { this.ref = ref; }
 	}
 	
 }
