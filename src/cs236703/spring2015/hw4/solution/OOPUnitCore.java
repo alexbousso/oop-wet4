@@ -81,15 +81,16 @@ public class OOPUnitCore {
 		
 		// Invoke all the test methods, and invoke the before and after methods if required
 		for(MethodPair mp : allTestMethods) {
-			Object backup = new Object();
+			Object backup = backupObject(testClass, newObject);
 			OOPResult result = new OOPResultImpl();
 			
 			// Backup the object and run all of the before methods
 			try {
-				backup = invokeBeforeMethods(mp.method.getName(), testClass, newObject);
+				invokeBeforeMethods(mp.method.getName(), testClass, newObject);
 			} catch (Exception e) {
 				result = new OOPResultImpl(e.getMessage(), OOPResult.OOPTestResult.ERROR);
 				resultMap.put(mp.method.getName(), result);
+				newObject = backup;
 				continue;
 			}
 			
@@ -126,26 +127,18 @@ public class OOPUnitCore {
 		return new OOPTestSummary(resultMap); 
 	}
 	
-	private static Object invokeBeforeMethods(String methodName, Class<?> testClass,
+	private static void invokeBeforeMethods(String methodName, Class<?> testClass,
 			Object testObject) throws Exception {
-		Object backup = backupObject(testClass, testObject);
 		
 		List<Method> methodsToRun = getBeforeAfterSetupMethods(testClass, OOPBefore.class);
 		for(Method method : methodsToRun){
 			OOPBefore annotation = method.getAnnotation(OOPBefore.class);
 			for(String s : annotation.value()) {
 				if(s.equals(methodName)) {
-					try {
-						method.invoke(testObject);
-					} catch(Exception e) {
-						testObject = backup;
-						throw e;
-					}
+					method.invoke(testObject);
 				}
 			}
 		}
-		
-		return backup;
 	}
 	
 	/**
@@ -195,8 +188,10 @@ public class OOPUnitCore {
 			field.setAccessible(true);
 			boolean didBackup = false;
 			
-			for (Class<?> i : field.getDeclaringClass().getInterfaces()) {
-				if (i.getName().equals("Cloneable")) {
+			Class<?>[] cls = field.getType().getInterfaces();
+			
+			for (Class<?> i : field.getType().getInterfaces()) {
+				if (i.getName().equals("java.lang.Cloneable")) {
 					try {
 						Object fieldBackup = field.getDeclaringClass().getMethod("clone").invoke(testObject);
 						field.set(backup, fieldBackup);
@@ -230,11 +225,7 @@ public class OOPUnitCore {
 			OOPAfter annotation = method.getAnnotation(OOPAfter.class);
 			for(String s : annotation.value()) {
 				if(s.equals(methodName)) {
-					try {
-						method.invoke(testObject);
-					} catch(Exception e) {
-						throw e;
-					}
+					method.invoke(testObject);
 				}
 			}
 		}

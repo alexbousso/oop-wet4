@@ -13,8 +13,8 @@ public class GovernmentJUnitTest {
 	@Test
 	public void test() {
 		OOPTestSummary result = OOPUnitCore.runClass(GovernmentOOPTest.class);
-		assertEquals(4, result.getNumSuccesses());
-		assertEquals(2, result.getNumErrors());
-		assertEquals(0, result.getNumFailures());
+		assertEquals(5, result.getNumSuccesses());
+		assertEquals(5, result.getNumErrors());
+		assertEquals(1, result.getNumFailures());
 	}
 }

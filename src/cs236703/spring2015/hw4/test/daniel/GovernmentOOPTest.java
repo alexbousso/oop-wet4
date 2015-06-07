@@ -1,9 +1,9 @@
 package cs236703.spring2015.hw4.test.daniel;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import cs236703.spring2015.hw4.solution.OOPAfter;
 import cs236703.spring2015.hw4.solution.OOPBefore;
@@ -14,13 +14,13 @@ import cs236703.spring2015.hw4.solution.OOPUnitCore;
 
 @OOPTestClass(true)
 public class GovernmentOOPTest {
-	Set<MemberOfKnesset> allMembers;
+	HashSet<MemberOfKnesset> allMembers;
 	SimpleDateFormat df;
 
 	/** Test setup **/
 	@OOPSetup
 	public void doSetup() {
-		allMembers = new LinkedHashSet<MemberOfKnesset>();
+		allMembers = new HashSet<MemberOfKnesset>();
 		df = new SimpleDateFormat("dd/MM/yyyy");
 	}
 
@@ -29,7 +29,7 @@ public class GovernmentOOPTest {
 			"testCountingAllMembersExceptPM", "testAddBills",
 			"testAddAssistantsWithoutExpecting",
 			"testaddAssistantsWithExpecting",
-			"testaddAssistantsWithWrongExpecting" })
+			"testaddAssistantsWithWrongExpecting", "testAssertGood", "testBadAssert" })
 	public void addMembersOfKnesset() {
 		try {
 			allMembers.add(new MemberOfKnesset("Oren Hazan", df
@@ -51,7 +51,7 @@ public class GovernmentOOPTest {
 			"testCountingAllMembersExceptPM",
 			"testAddAssistantsWithoutExpecting",
 			"testaddAssistantsWithExpecting",
-			"testaddAssistantsWithWrongExpecting" })
+			"testaddAssistantsWithWrongExpecting", "testAssertGood", "testBadAssert"  })
 	public void addMinisters() {
 		try {
 			allMembers.add(new Minister("Miri Regev", df.parse("26/05/1965"),
@@ -69,7 +69,7 @@ public class GovernmentOOPTest {
 			"testCountingAllMembersExceptPM",
 			"testAddAssistantsWithoutExpecting",
 			"testaddAssistantsWithExpecting",
-			"testaddAssistantsWithWrongExpecting" })
+			"testaddAssistantsWithWrongExpecting", "testAssertGood", "testBadAssert"  })
 	public void addPrimeMinister() {
 		try {
 			allMembers.add(new PrimeMinister("Benjamin Netanyahu", df
@@ -79,12 +79,29 @@ public class GovernmentOOPTest {
 			e.printStackTrace();
 		}
 	}
+	
+	@OOPBefore({"testBadBefore", "testBadBeforeAndAfter"})
+	public void badBefore() throws Exception {
+		allMembers.clear();
+		for(int i = 0 ; i < 100 ; i++) {
+			allMembers.add(new MemberOfKnesset("Person " + i, new Date(), i));
+		}
+		
+		throw new Exception("badBefore just destroyed the object!");
+	}
+	
+	@OOPAfter({"testBadAfter", "testBadBeforeAndAfter"})
+	public void badAfter() throws Exception {
+		df = null;
+		
+		throw new Exception("badAfter just destroyed the object!");
+	}
 
 	@OOPAfter({ "testCountingAllNonMinisters",
 			"testCountingAllMembersExceptPM",
 			"testAddAssistantsWithoutExpecting",
 			"testaddAssistantsWithExpecting",
-			"testaddAssistantsWithWrongExpecting" })
+			"testaddAssistantsWithWrongExpecting", "testAssertGood", "testBadAssert"  })
 	public void removePrimeMinister() {
 		// An iterator must be used here explicitly to avoid ConcurrentModificationException
 		Iterator<MemberOfKnesset> iter = allMembers.iterator();
@@ -102,7 +119,7 @@ public class GovernmentOOPTest {
 			"testCountingAllMembersExceptPM",
 			"testAddAssistantsWithoutExpecting",
 			"testaddAssistantsWithExpecting",
-			"testaddAssistantsWithWrongExpecting" })
+			"testaddAssistantsWithWrongExpecting", "testAssertGood", "testBadAssert"  })
 	public void removeMinisters() {
 		// An iterator must be used here explicitly to avoid ConcurrentModificationException
 		Iterator<MemberOfKnesset> iter = allMembers.iterator();
@@ -120,7 +137,7 @@ public class GovernmentOOPTest {
 			"testCountingAllMembersExceptPM", "testAddBills",
 			"testAddAssistantsWithoutExpecting",
 			"testaddAssistantsWithExpecting",
-			"testaddAssistantsWithWrongExpecting" })
+			"testaddAssistantsWithWrongExpecting", "testAssertGood", "testBadAssert"  })
 	public void removeMembersOfKnesset() {
 		// An iterator must be used here explicitly to avoid ConcurrentModificationException
 		Iterator<MemberOfKnesset> iter = allMembers.iterator();
@@ -134,6 +151,8 @@ public class GovernmentOOPTest {
 		}
 	}
 
+	
+	
 	/** Actual testing methods **/
 
 	@OOPTest(order = 1)
@@ -196,6 +215,51 @@ public class GovernmentOOPTest {
 		}
 
 		// Now an exception should be thrown and NOT be expected
+	}
+	
+	@OOPTest(order = 7)
+	public void testBadBefore() {
+		// Do nothing
+	}
+	
+	@OOPTest(order = 8)
+	public void testBadAfter() {
+		// Do nothing
+	}
+	
+	@OOPTest(order = 9)
+	public void testBadBeforeAndAfter() {
+		// Do nothing
+	}
+	
+	@OOPTest(order = 10)
+	public void testAssertGood() {
+		int countMembersOfKnesset = 0, countMinisters = 0, countPMs = 0;
+		
+		for(MemberOfKnesset k : allMembers) {
+			countMembersOfKnesset++;
+			if(k.isMinister()) countMinisters++;
+			if(k.isPrimeMinister()) countPMs++;
+		}
+		
+		OOPUnitCore.assertEquals(9, countMembersOfKnesset);
+		OOPUnitCore.assertEquals(4, countMinisters);
+		OOPUnitCore.assertEquals(1, countPMs);
+	}
+	
+	@OOPTest(order = 11)
+	public void testBadAssert() {
+		int countMembersOfKnesset = 0, countMinisters = 0, countPMs = 0;
+		
+		for(MemberOfKnesset k : allMembers) {
+			countMembersOfKnesset++;
+			if(k.isMinister()) countMinisters++;
+			if(k.isPrimeMinister()) countPMs++;
+		}
+		
+		OOPUnitCore.assertEquals(9, countMembersOfKnesset);
+		OOPUnitCore.assertEquals(4, countMinisters);
+		OOPUnitCore.assertEquals(2, countPMs); // Should fall here
 	}
 
 }
