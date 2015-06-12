@@ -18,11 +18,12 @@ public class SuperCow {
 	public void setupCow() {
 		this.moo3 = "setup";
 		this.god = "setup";
+//		System.out.print("Setup->");
 	}
 	
 	@OOPBefore({"god1"})
 	public void beforeCowGod1() {
-		OOPUnitCore.assertEquals("setup", this.god);
+		OOPUnitCore.assertEquals("initial value", this.god);
 		this.god = "before in SuperCow";
 	}
 	
@@ -34,6 +35,7 @@ public class SuperCow {
 	
 	@OOPBefore({"cow1"})
 	public void beforeCow1() {
+//		System.out.print("beforeCow1->");
 		this.moo1 = "moo1";
 	}
 	
@@ -50,6 +52,7 @@ public class SuperCow {
 	
 	@OOPTest(order = 10)
 	public void cow1() {
+//		System.out.print("cow1->");
 		OOPUnitCore.assertEquals("moo1", this.moo1);
 		OOPUnitCore.assertEquals("no moo", this.moo2);
 		this.moo1 = "moooo";
@@ -57,6 +60,7 @@ public class SuperCow {
 	
 	@OOPTest(order = 20)
 	public void cow2() {
+//		System.out.print("cow2->");
 		OOPUnitCore.assertEquals("meow", this.moo1);
 		OOPUnitCore.assertEquals("moo2", this.moo2);
 		this.moo2 = "moooooooooo";
@@ -64,17 +68,20 @@ public class SuperCow {
 	
 	@OOPTest(order = 30)
 	public void cow3() {
+//		System.out.print("cow3->");
 		this.moo3 = "in test";
 	}
 	
 	@OOPTest(order = 31)
 	public void cow4() {
+//		System.out.print("cow4->\n");
 		// Checking if backup after 'BeforeTest' fails works
 		OOPUnitCore.assertEquals("setup", this.moo3);
 	}
 	
 	@OOPAfter({"cow1"})
 	public void afterCow1() {
+//		System.out.print("afterCow1->");
 		OOPUnitCore.assertEquals("moooo", this.moo1);
 		this.moo1 = "meow";
 	}

@@ -8,7 +8,7 @@ import cs236703.spring2015.hw4.solution.OOPTestSummary;
 import cs236703.spring2015.hw4.solution.OOPUnitCore;
 
 public class TestingTestAlex {
-
+	
 	@Test
 	public void testSuperCow() {
 		OOPTestSummary result = OOPUnitCore.runClass(SuperCow.class);
@@ -20,8 +20,17 @@ public class TestingTestAlex {
 	@Test
 	public void testGod() {
 		OOPTestSummary result = OOPUnitCore.runClass(God.class);
-		assertEquals(4, result.getNumSuccesses());
-		assertEquals(0, result.getNumFailures());
+		System.out.print(result.toString());
+		assertEquals(7, result.getNumSuccesses());
+		assertEquals(1, result.getNumFailures());
 		assertEquals(1, result.getNumErrors());
+	}
+	
+	@Test
+	public void testOrder() {
+		OOPTestSummary result = OOPUnitCore.runClass(Son.class);
+		assertEquals(5, result.getNumSuccesses());
+		assertEquals(0, result.getNumFailures());
+		assertEquals(0, result.getNumErrors());
 	}
 }

@@ -49,16 +49,9 @@ public class God extends SuperCow {
 	}
 	
 	@Override
-	public void cow1() {}
-	
-	@Override
-	public void cow2() {}
-	
-	@Override
-	public void cow3() {}
-	
-	@Override
-	public void cow4() {}
+	public void cow4() {
+		OOPUnitCore.assertEquals("initial value", this.moo3);
+	}
 }
 
 

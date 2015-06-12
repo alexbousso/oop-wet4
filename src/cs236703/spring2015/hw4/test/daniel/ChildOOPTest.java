@@ -28,6 +28,7 @@ public class ChildOOPTest extends ParentOOPTest {
 	
 	@OOPTest(order = 1)
 	public void testInit() {
+		System.out.print("testInit");
 		OOPUnitCore.assertEquals("Child", name);
 		OOPUnitCore.assertEquals(12, age);
 	}
