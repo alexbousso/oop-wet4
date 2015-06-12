@@ -41,13 +41,15 @@ public class OOPUnitCore {
 		}
 
 		// Find the empty constructor and run it to instantiate the class
-		Constructor<?>[] constArray = testClass.getConstructors();
+		Constructor<?> constructor = null;
 		Object newObject = new Object();
-		for (Constructor<?> con : constArray) {
+		for (Constructor<?> con : testClass.getDeclaredConstructors()) {
 			if (con.getParameterTypes().length == 0) {
 				try {
 					con.setAccessible(true);
+					constructor = con;
 					newObject = con.newInstance();
+					break;
 				} catch (Exception e) {
 				}
 			}
@@ -75,7 +77,7 @@ public class OOPUnitCore {
 			// Try to create a backup. If one of the fields were not backed up, throw an exception
 			OOPResult result = new OOPResultImpl();
 			try {
-				backup = backupObject(testClass, newObject);
+				backup = backupObject(testClass, newObject, constructor);
 			} catch(Exception e) {
 				result = new OOPResultImpl("The test must throw",
 						OOPResult.OOPTestResult.FAILURE);
@@ -233,11 +235,12 @@ public class OOPUnitCore {
 		return returnList;
 	}
 
-	private static Object backupObject(Class<?> testClass, Object testObject) throws Exception {
+	private static Object backupObject(Class<?> testClass, Object testObject, Constructor<?> accessibleConstructor) throws Exception {
 		Object backup = new Object();
 		try {
-			backup = testClass.newInstance();
+			backup = accessibleConstructor.newInstance();
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		for (Field field : testClass.getDeclaredFields()) {
@@ -252,8 +255,7 @@ public class OOPUnitCore {
 						field.set(backup, fieldBackup);
 						didBackup = true;
 						break;
-					} catch (Exception e) {
-					}
+					} catch (Exception e) {}
 				}
 			}
 
@@ -264,8 +266,7 @@ public class OOPUnitCore {
 				Constructor<?> c = field.getDeclaringClass().getConstructor(testClass);
 				field.set(backup, c.newInstance(field.get(testObject)));
 				didBackup = true;
-			} catch (Exception e) {
-			}
+			} catch (Exception e) {}
 
 			if(!didBackup) {
 				try {
