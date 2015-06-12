@@ -18,8 +18,6 @@ public class Son extends Dad{
 	
 	@OOPTest(order = 10)
 	public void CheckListOrder() {
-		System.out.println(MyList.toString());
-		
 		for (int i = 1; i <= 4; i++) {
 			OOPUnitCore.assertEquals(MyList.get(i - 1).intValue(), i);
 		}

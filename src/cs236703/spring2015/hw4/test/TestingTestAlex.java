@@ -20,7 +20,7 @@ public class TestingTestAlex {
 	@Test
 	public void testGod() {
 		OOPTestSummary result = OOPUnitCore.runClass(God.class);
-		System.out.print(result.toString());
+		
 		assertEquals(7, result.getNumSuccesses());
 		assertEquals(1, result.getNumFailures());
 		assertEquals(1, result.getNumErrors());
@@ -32,5 +32,13 @@ public class TestingTestAlex {
 		assertEquals(5, result.getNumSuccesses());
 		assertEquals(0, result.getNumFailures());
 		assertEquals(0, result.getNumErrors());
+	}
+	
+	@Test
+	public void testPrivateModifiers() {
+		OOPTestSummary result = OOPUnitCore.runClass(PrivateObject.class);
+		assertEquals(1, result.getNumSuccesses());
+		assertEquals(0, result.getNumFailures());
+		assertEquals(1, result.getNumErrors());
 	}
 }
